@@ -22,21 +22,25 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.view.menu.MenuBuilder;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.SwitchCompat;
-import android.support.v7.widget.Toolbar;
+
+import com.github.prakma.api.ServerApi;
+import com.github.prakma.init.AutoCallerInit;
+import com.github.prakma.state.AutoCallerDB;
+import com.github.prakma.ui.activities.SetupActivity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.core.view.MenuItemCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -52,7 +56,6 @@ import com.github.axet.androidlibrary.services.StorageProvider;
 import com.github.axet.androidlibrary.widgets.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.AppCompatThemeActivity;
 import com.github.axet.androidlibrary.widgets.ErrorDialog;
-import com.github.axet.androidlibrary.widgets.InvalidateOptionsMenuCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.audiolibrary.encoders.Format3GP;
 import com.github.axet.audiolibrary.encoders.FormatFLAC;
@@ -340,6 +343,9 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
 
         RecordingService.startIfEnabled(this);
 
+        // init the ArtemisCaller for Firebase
+        AutoCallerInit.getInstance().init(this);
+
         Intent intent = getIntent();
         openIntent(intent);
     }
@@ -418,12 +424,16 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
+            case R.id.action_leap_setup:
+                startActivity(new Intent(this, SetupActivity.class));
+                return true;
             case R.id.action_call:
                 item.setChecked(!item.isChecked());
                 if (item.isChecked() && !Storage.permitted(MainActivity.this, PERMISSIONS, RESULT_CALL)) {
                     resumeCall = item;
                     return true;
                 }
+
                 RecordingService.setEnabled(this, item.isChecked());
                 return true;
             case R.id.action_show_folder:

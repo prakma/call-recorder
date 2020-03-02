@@ -21,7 +21,7 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -50,6 +50,12 @@ import com.github.axet.callrecorder.activities.RecentCallActivity;
 import com.github.axet.callrecorder.activities.SettingsActivity;
 import com.github.axet.callrecorder.app.CallApplication;
 import com.github.axet.callrecorder.app.Storage;
+import com.github.prakma.api.AutoCallerConstants;
+import com.github.prakma.api.ServerApi;
+import com.github.prakma.api.ServerApiBase;
+import com.github.prakma.state.AutoCallerDB;
+import com.github.prakma.tasks.AddToUploadQueueTask;
+import com.github.prakma.tasks.UploaderTask;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -91,6 +97,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
     String contact = "";
     String contactId = "";
     String call;
+    String serverCallRefId = ""; // leap's callReferenceId. It needs to be passed back when uploading the recording
 
     PhoneStateChangeListener pscl;
     Handler handle = new Handler();
@@ -124,6 +131,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
         edit.commit();
         if (b) {
             RecordingService.start(context);
+
             Toast.makeText(context, R.string.recording_enabled, Toast.LENGTH_SHORT).show();
         } else {
             RecordingService.stop(context);
@@ -189,18 +197,20 @@ public class RecordingService extends PersistentService implements SharedPrefere
         public String contact;
         public String contactId;
         public String call;
+        //public String serverCallRefId;
         public long now;
 
         public CallInfo() {
         }
 
-        public CallInfo(Uri t, String p, String c, String cid, String call, long now) {
+        public CallInfo(Uri t, String p, String c, String cid, String call, long now/*, String scrId*/) {
             this.targetUri = t;
             this.phone = p;
             this.contact = c;
             this.contactId = cid;
             this.call = call;
             this.now = now;
+            //this.serverCallRefId = scrId;
         }
     }
 
@@ -257,10 +267,14 @@ public class RecordingService extends PersistentService implements SharedPrefere
         @Override
         public void onReceive(Context context, Intent intent) {
             String a = intent.getAction();
+            //String referenceId = intent.getStringExtra(AutoCallerConstants.CALL_REFERENCE_ID);
+            String referenceId = AutoCallerDB.getInstance(context).getCallReferenceId();
+            AutoCallerConstants.dumpIntents(intent);
+            Log.i(TAG, "call reference id is "+referenceId);
             if (a.equals(TelephonyManager.ACTION_PHONE_STATE_CHANGED))
-                setPhone(intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER), call);
+                setPhone(intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER), call, referenceId);
             if (a.equals(Intent.ACTION_NEW_OUTGOING_CALL))
-                setPhone(intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER), CallApplication.CALL_OUT);
+                setPhone(intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER), CallApplication.CALL_OUT, referenceId);
         }
     }
 
@@ -286,17 +300,20 @@ public class RecordingService extends PersistentService implements SharedPrefere
             try {
                 switch (s) {
                     case TelephonyManager.CALL_STATE_RINGING:
-                        setPhone(incomingNumber, CallApplication.CALL_IN);
+                        setPhone(incomingNumber, CallApplication.CALL_IN, "");
+                        Log.i("RecordingService", "Call_State_Ringing");
                         wasRinging = true;
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
-                        setPhone(incomingNumber, call);
+                        setPhone(incomingNumber, call, "");
+                        Log.i("RecordingService", "Call_State_OffHook");
                         if (thread == null) { // handling restart while current call
                             begin(wasRinging);
                             startedByCall = true;
                         }
                         break;
                     case TelephonyManager.CALL_STATE_IDLE:
+                        Log.i("RecordingService", "Call_State_Idle");
                         if (startedByCall) {
                             if (tm.getCallState() != TelephonyManager.CALL_STATE_OFFHOOK) // current state maybe differed from queued (s) one
                                 finish();
@@ -314,6 +331,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
                         contactId = "";
                         contact = "";
                         call = "";
+                        serverCallRefId = "";
                         break;
                 }
             } catch (RuntimeException e) {
@@ -323,9 +341,10 @@ public class RecordingService extends PersistentService implements SharedPrefere
     }
 
     public RecordingService() {
+        Log.i(TAG, "Recording Service Instantiated");
     }
 
-    public void setPhone(String s, String c) {
+    public void setPhone(String s, String c, String leapCallRefId) {
         if (s == null || s.isEmpty())
             return;
 
@@ -354,6 +373,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
         }
 
         call = c;
+        serverCallRefId = leapCallRefId;
     }
 
     @Override
@@ -604,9 +624,16 @@ public class RecordingService extends PersistentService implements SharedPrefere
     }
 
     public void showDone(Uri targetUri) {
+
+        // add a task to upload the recording to server
+        new AddToUploadQueueTask(RecordingService.this).execute(targetUri);
+        Log.i(TAG, "Recording is done? uri "+targetUri.toString());
+
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         if (!shared.getBoolean(CallApplication.PREFERENCE_DONE_NOTIFICATION, false))
             return;
+
+
         RecentCallActivity.startActivity(this, targetUri, true);
     }
 
@@ -682,12 +709,14 @@ public class RecordingService extends PersistentService implements SharedPrefere
                         deleteOld();
                         stopRecording();
                         updateIcon(false);
+                        Log.i(TAG,"Runnable - done "+info.targetUri.toString());
                     }
                 };
 
                 Runnable save = new Runnable() {
                     @Override
                     public void run() {
+                        Log.i(TAG," Runnable - save "+info.targetUri.toString());
                         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(RecordingService.this);
                         SharedPreferences.Editor edit = shared.edit();
                         edit.putString(CallApplication.PREFERENCE_LAST, Storage.getName(RecordingService.this, fly.targetUri));
@@ -696,6 +725,12 @@ public class RecordingService extends PersistentService implements SharedPrefere
                         CallApplication.setContact(RecordingService.this, info.targetUri, info.contactId);
                         CallApplication.setCall(RecordingService.this, info.targetUri, info.call);
                         MainActivity.last(RecordingService.this);
+
+                        // upload the recording to server
+                        // new AddToUploadQueueTask(RecordingService.this).execute(info.targetUri);
+                        // boolean uploadSuccessful = ServerApiBase.getInstance().sendFile2Server(info.targetUri);
+                        //boolean uploadSuccessful = false;
+                        //Log.i(TAG," Runnable - save. File uploaded to server, sucessfully ?"+uploadSuccessful+", "+info.targetUri.toString());
                         showDone(info.targetUri);
                     }
                 };
@@ -1017,12 +1052,15 @@ public class RecordingService extends PersistentService implements SharedPrefere
 
     void finish() {
         stopRecording();
+        Log.i(TAG, "Finish called");
         File tmp = storage.getTempRecording();
         if (tmp.exists() && tmp.length() > 0) {
             File parent = tmp.getParentFile();
             File in = Storage.getNextFile(parent, Storage.TMP_REC, null);
             Storage.move(tmp, in);
             mapTarget.put(in, new CallInfo(targetUri, phone, contact, contactId, call, now));
+
+            //ServerApi.getInstance().sendFile2Server(in);
             if (encoder == null) // double finish()? skip
                 encodingNext();
             else
@@ -1030,6 +1068,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
         } else { // if encoding failed, we will get no output file, hide notifications
             deleteOld();
             updateIcon(false);
+            //ServerApiBase.getInstance().sendNoRecording2Server();
         }
     }
 
@@ -1078,6 +1117,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
                 CallApplication.setCall(RecordingService.this, t, call);
                 MainActivity.last(RecordingService.this);
                 showDone(t);
+                Log.i(TAG, "Successful recording happened. File is "+inFile.getAbsolutePath());
             }
         });
     }

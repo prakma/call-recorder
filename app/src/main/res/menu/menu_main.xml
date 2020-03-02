@@ -47,11 +47,17 @@
         android:title="@string/open_recording_folder"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_leap_setup"
+        android:orderInCategory="400"
+        android:title="Leap Setup"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_call"
         android:checkable="true"
         android:orderInCategory="500"
         android:title="@string/call_recording"
         app:showAsAction="never" />
+
     <item
         android:id="@+id/action_about"
         android:orderInCategory="600"

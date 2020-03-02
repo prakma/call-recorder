@@ -7,7 +7,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v7.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import com.github.axet.androidlibrary.app.NotificationManagerCompat;
@@ -26,6 +26,7 @@ public class CallApplication extends com.github.axet.audiolibrary.app.MainApplic
     public static final String PREFERENCE_NEXT = "next";
     public static final String PREFERENCE_DETAILS_CONTACT = "_contact";
     public static final String PREFERENCE_DETAILS_CALL = "_call";
+    public static final String PREFERENCE_DETAILS_CALL_REF_ID = "_callRefId";
     public static final String PREFERENCE_SOURCE = "source";
     public static final String PREFERENCE_FILTER_IN = "filter_in";
     public static final String PREFERENCE_FILTER_OUT = "filter_out";
@@ -131,6 +132,21 @@ public class CallApplication extends com.github.axet.audiolibrary.app.MainApplic
         String p = getFilePref(f) + PREFERENCE_DETAILS_CALL;
         SharedPreferences.Editor editor = shared.edit();
         editor.putString(p, id);
+        editor.commit();
+    }
+
+    public static String getCallRefId(Context context, Uri f){
+        final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        String p = getFilePref(f) + PREFERENCE_DETAILS_CALL_REF_ID;
+        return shared.getString(p, null);
+
+    }
+
+    public static void setCallRefIf(Context context, Uri f, String callRefId){
+        final SharedPreferences shared = android.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        String p = getFilePref(f) + PREFERENCE_DETAILS_CALL_REF_ID;
+        SharedPreferences.Editor editor = shared.edit();
+        editor.putString(p, callRefId);
         editor.commit();
     }
 

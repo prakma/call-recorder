@@ -2,8 +2,8 @@ package com.github.axet.callrecorder.widgets;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.SwitchPreferenceCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.SwitchPreferenceCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.Toast;
