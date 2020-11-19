@@ -72,7 +72,7 @@
     <string name="sort_by_contact_z_a">Contact Z-A</string>
     <string name="sort_by_contact_a_z">Contact A-Z</string>
     <string name="title_activity_setup">Setup</string>
-    <string name="prompt_email">Email</string>
+    <string name="prompt_email">Email/UserId</string>
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
@@ -83,9 +83,14 @@
     <string name="ignore_ssl">Ignore SSL</string>
     <string name="device_token">Device Token</string>
     <string name="leap_uri_base">Leap URI Base</string>
-    <string name="prompt_tenant">Tenant2</string>
-    <string name="prompt_phone">Enter your Phone Number</string>
-    <string name="register_btn">Register your App</string>
+    <string name="record_location_hint">Record Location Hint</string>
+    <string name="record_location_hint_prefilled">Record/PhoneRecord</string>
+    <string name="prompt_tenant">Tenant</string>
+    <string name="prompt_dlrcode">Dealer Code</string>
+    <string name="prompt_phone">Phone Number</string>
+    <string name="register_btn">Register</string>
+    <string name="eula">I agree to the <a href="https://leadics.com/artemistermsofservice/">EULA</a></string>
+    <string name="view_recent_log">Recent Artemis Logs</string>
     <string-array name="source_text">
         <item>Auto (default)</item>
         <item>Voice Line</item>

@@ -2,15 +2,18 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.github.axet.dxplugin'
 
 android {
+    //compileSdkVersion 28
     compileSdkVersion 28
 //    buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId "mp.artemiscaller"
-        minSdkVersion 26
-        targetSdkVersion 26
-        versionCode 200
-        versionName "2.0.0"
+        minSdkVersion 23
+        targetSdkVersion 23
+        versionCode 2012
+        versionName "2.0.12"
+        // read artemiscaller.properties file from project root folder
+        buildConfigField 'java.util.HashMap<String, String>', 'PropertyPairs', makePropertyHashMap(getRootDir().getPath() + File.separator + 'app/artemiscaller.properties')
     }
     signingConfigs {
         release {
@@ -59,6 +62,29 @@ task fetch() {
         new URL(url).withInputStream { i -> surveys.withOutputStream { it << i } }
 }
 
+def makePropertyHashMap(filename) {
+    def artemisProperties = new Properties()
+    try {
+        artemisProperties.load(new FileInputStream(file(filename)))
+        System.out.println("properties filename "+filename);
+    } catch (FileNotFoundException e) {
+        artemisProperties = null
+        System.err.println('artemisProperties value is null'+filename)
+    }
+
+    // result example: new Hashtable<String, Boolean>(){{ put(true, "a"); }};
+    def prefix = 'new java.util.HashMap<String, String>(){{ '
+    def suffix = '}}'
+    def value = ''
+    if (artemisProperties != null) {
+        for (d in artemisProperties) {
+            value += String.format('put("%s","%s"); ', d.key, d.value)
+        }
+    }
+
+    return String.format('%s%s%s', prefix, value, suffix)
+}
+
 clean.doLast {
     surveys.delete()
 }
@@ -82,6 +108,16 @@ dependencies {
     // Add the WorkManager dependency
     // (Java only)
     implementation "androidx.work:work-runtime:2.2.0"
+
+
+    // Bugfender debugging library
+    implementation 'com.bugfender.sdk:android:3.+'
+
+    // libraries to enable upload to S3
+    // implementation 'com.amazonaws:aws-android-sdk-cognito:2.2.+'
+    implementation 'com.amazonaws:aws-android-sdk-s3:2.6.+'
+
+
 
 
 

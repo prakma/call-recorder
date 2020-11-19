@@ -13,8 +13,9 @@ import com.github.prakma.state.AutoCallerDB;
 
 import java.io.File;
 
+@Deprecated
 public class UploaderTask extends AsyncTask<Uri, Integer, String> {
-    private static final String TAG = "UploaderTask";
+    private static final String TAG = "prakma.UploaderTask";
 
     private Context appContext;
     private Uri lastFile;

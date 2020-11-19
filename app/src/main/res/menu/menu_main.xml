@@ -49,8 +49,13 @@
     <item
         android:id="@+id/action_leap_setup"
         android:orderInCategory="400"
-        android:title="Leap Setup"
-        app:showAsAction="always" />
+        android:title="Setup"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_leap_log"
+        android:orderInCategory="410"
+        android:title="View Log"
+        app:showAsAction="never" />
     <item
         android:id="@+id/action_call"
         android:checkable="true"
@@ -58,9 +63,9 @@
         android:title="@string/call_recording"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_about"
-        android:orderInCategory="600"
-        android:title="@string/menu_about"
-        app:showAsAction="never" />
+<!--    <item-->
+<!--        android:id="@+id/action_about"-->
+<!--        android:orderInCategory="600"-->
+<!--        android:title="@string/menu_about"-->
+<!--        app:showAsAction="never" />-->
 </menu>

@@ -57,7 +57,7 @@
             android:title="@string/pref_nameformat_title" />
 
         <ListPreference
-            android:defaultValue="off"
+            android:defaultValue="@string/delete_1day"
             android:entries="@array/delete_text"
             android:entryValues="@array/delete_values"
             android:key="delete"

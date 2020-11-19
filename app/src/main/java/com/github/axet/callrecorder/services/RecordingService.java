@@ -55,7 +55,7 @@ import com.github.prakma.api.ServerApi;
 import com.github.prakma.api.ServerApiBase;
 import com.github.prakma.state.AutoCallerDB;
 import com.github.prakma.tasks.AddToUploadQueueTask;
-import com.github.prakma.tasks.UploaderTask;
+//import com.github.prakma.tasks.UploaderTask;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -623,11 +623,11 @@ public class RecordingService extends PersistentService implements SharedPrefere
         optimization.icon.updateIcon(show ? new Intent() : null);
     }
 
-    public void showDone(Uri targetUri) {
+    public void showDone(Uri targetUri, String call, String phone) {
 
         // add a task to upload the recording to server
-        new AddToUploadQueueTask(RecordingService.this).execute(targetUri);
-        Log.i(TAG, "Recording is done? uri "+targetUri.toString());
+        new AddToUploadQueueTask(RecordingService.this, call, phone).execute(targetUri);
+        Log.i(TAG, "Recording is done? phone "+phone+" , uri "+targetUri.toString());
 
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         if (!shared.getBoolean(CallApplication.PREFERENCE_DONE_NOTIFICATION, false))
@@ -731,7 +731,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
                         // boolean uploadSuccessful = ServerApiBase.getInstance().sendFile2Server(info.targetUri);
                         //boolean uploadSuccessful = false;
                         //Log.i(TAG," Runnable - save. File uploaded to server, sucessfully ?"+uploadSuccessful+", "+info.targetUri.toString());
-                        showDone(info.targetUri);
+                        showDone(info.targetUri, info.call, info.phone);
                     }
                 };
 
@@ -911,7 +911,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
                             CallApplication.setContact(RecordingService.this, info.targetUri, info.contactId);
                             CallApplication.setCall(RecordingService.this, info.targetUri, info.call);
                             MainActivity.last(RecordingService.this);
-                            showDone(info.targetUri);
+                            showDone(info.targetUri, info.call, info.phone);
                         }
                     };
 
@@ -1097,6 +1097,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
         targetUri = c.targetUri; // update notification encoding name
         final String contactId = c.contactId;
         final String call = c.call;
+        final String phone = c.phone;
         final Uri targetUri = RecordingService.this.targetUri;
         encoding = new Runnable() { //  allways called when done
             @Override
@@ -1116,7 +1117,7 @@ public class RecordingService extends PersistentService implements SharedPrefere
                 CallApplication.setContact(RecordingService.this, t, contactId);
                 CallApplication.setCall(RecordingService.this, t, call);
                 MainActivity.last(RecordingService.this);
-                showDone(t);
+                showDone(t, call, phone);
                 Log.i(TAG, "Successful recording happened. File is "+inFile.getAbsolutePath());
             }
         });

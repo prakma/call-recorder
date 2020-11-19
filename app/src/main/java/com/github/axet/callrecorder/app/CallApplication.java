@@ -10,12 +10,21 @@ import android.os.Build;
 import androidx.preference.PreferenceManager;
 import android.util.Log;
 
+import com.bugfender.android.BuildConfig;
+import com.bugfender.sdk.Bugfender;
 import com.github.axet.androidlibrary.app.NotificationManagerCompat;
 import com.github.axet.androidlibrary.widgets.NotificationChannelCompat;
 import com.github.axet.androidlibrary.widgets.OptimizationPreferenceCompat;
 import com.github.axet.callrecorder.R;
+import com.github.prakma.api.AutoCallerConstants;
 
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+//import java.time.Instant;
+//import java.time.ZoneId;
+//import java.time.ZonedDateTime;
+//import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Locale;
 
 public class CallApplication extends com.github.axet.audiolibrary.app.MainApplication {
@@ -64,6 +73,14 @@ public class CallApplication extends com.github.axet.audiolibrary.app.MainApplic
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Bugfender.init(this, "UjYrttwkuDjL2ZEVRsgd9ckE6uk5DniR", BuildConfig.DEBUG);
+        Bugfender.enableCrashReporting();
+        Bugfender.enableUIEventLogging(this);
+        //Bugfender.enableLogcatLogging();
+
+        create_diagnostic_log();
+
 
         channelPersistent = new NotificationChannelCompat(this, "icon", "Persistent Icon", NotificationManagerCompat.IMPORTANCE_LOW);
         channelStatus = new NotificationChannelCompat(this, "status", "Status", NotificationManagerCompat.IMPORTANCE_LOW);
@@ -183,5 +200,54 @@ public class CallApplication extends com.github.axet.audiolibrary.app.MainApplic
         str = res.getStringArray(id);
         new Resources(context.getAssets(), context.getResources().getDisplayMetrics(), context.getResources().getConfiguration()); // restore side effect
         return str;
+    }
+
+    private static void test_code(){
+        //        String currentDateTimeInISOFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+//                .format(Instant.now().atZone(ZoneId.systemDefault()));
+//        Log.i("prkma - TAG", "currentDateTimeInISOFormat: "+currentDateTimeInISOFormat);
+
+        //ZonedDateTime zdt = ZonedDateTime.now();
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        //SimpleDateFormat sdf = SimpleDateFormat.getInstance().format()
+//        String dateSubfolder1 = DateTimeFormatter.ISO_DATE.format(zdt);
+//        String dateSubfolder2 = DateTimeFormatter.ISO_LOCAL_DATE.format(zdt);
+//        String dateSubfolder3 = DateTimeFormatter.ISO_ZONED_DATE_TIME.format(zdt);
+//        String dateSubfolder4 = DateTimeFormatter.BASIC_ISO_DATE.format(zdt);
+
+        Date now = new Date();
+        String dateSubfolder1 = simpleDateFormat.format(now);
+
+        Log.i(TAG, "isoDate subfolder for current time is "+dateSubfolder1);
+//        Log.i(TAG, "isolocalDate subfolder for current time is "+dateSubfolder2);
+//        Log.i(TAG, "isozonedDate subfolder for current time is "+dateSubfolder3);
+//        Log.i(TAG, "basicisoDate subfolder for current time is "+dateSubfolder4);
+
+        String dateWithTimePattern = "yyyy-MM-dd HH:mm:ss";
+        SimpleDateFormat simpleDateWithTimeFormat = new SimpleDateFormat(dateWithTimePattern);
+
+        String dateSubfolder2 = simpleDateWithTimeFormat.format(now);
+
+        Log.i(TAG, "datewithtime subfolder for current time is "+dateSubfolder2);
+
+        try {
+            Date reproducedDate = simpleDateWithTimeFormat.parse(dateSubfolder2);
+            String dateSubfolder3 = simpleDateWithTimeFormat.format(reproducedDate);
+
+            Log.i(TAG, "reproduced datewithtime subfolder for current time is " + dateSubfolder3);
+        }catch(Exception ex){
+            Log.e(TAG, ex.getMessage(), ex);
+        }
+    }
+
+    private void create_diagnostic_log(){
+        String mfr = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        String product = Build.PRODUCT;
+        String androidVersion = Build.VERSION.RELEASE;
+        int androidSDKVersion = Build.VERSION.SDK_INT;
+
+        Log.i(TAG, "Model- "+model+", Product-"+product+", androidVersion - "+androidVersion+", sdkVersion- "+androidSDKVersion);
     }
 }

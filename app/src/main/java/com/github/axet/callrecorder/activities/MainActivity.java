@@ -26,7 +26,9 @@ import android.preference.PreferenceManager;
 import com.github.prakma.api.ServerApi;
 import com.github.prakma.init.AutoCallerInit;
 import com.github.prakma.state.AutoCallerDB;
+import com.github.prakma.state.LogBuffer;
 import com.github.prakma.ui.activities.SetupActivity;
+import com.github.prakma.ui.activities.ViewLogActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.core.view.MenuItemCompat;
 import androidx.appcompat.app.AlertDialog;
@@ -45,6 +47,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -77,6 +80,9 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.util.Arrays;
 import java.util.Locale;
+
+import com.bugfender.sdk.Bugfender;
+import com.bugfender.android.BuildConfig;
 
 public class MainActivity extends AppCompatThemeActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     public final static String TAG = MainActivity.class.getSimpleName();
@@ -126,6 +132,7 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
         @Override
         public void onReceive(Context context, Intent intent) {
             String a = intent.getAction();
+            //Log.i(TAG, "Broadcast Receiver - received intent action "+a);
             if (a.equals(SHOW_PROGRESS)) {
                 encoding = -1;
                 show = intent.getBooleanExtra("show", false);
@@ -211,6 +218,12 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        //Bugfender.enableLogcatLogging(); // optional, if you want logs automatically collected from logcat
+
+
+
 
         setContentView(R.layout.activity_main);
 
@@ -346,6 +359,7 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
         // init the ArtemisCaller for Firebase
         AutoCallerInit.getInstance().init(this);
 
+
         Intent intent = getIntent();
         openIntent(intent);
     }
@@ -360,12 +374,57 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
     @SuppressLint("RestrictedApi")
     void openIntent(Intent intent) {
         String a = intent.getAction();
+        //Log.i(TAG, "Opening the intent from notification !!! Action is "+a);
+        if (intent.getExtras() != null) {
+            String key = "ArtemisCaller.NewVersion.Update";
+            if(intent.getExtras().containsKey(key)){
+                // this is a new version download notification
+                String newVersionUrl = intent.getExtras().getString(key);
+                LogBuffer.getInstance().createLogEntry("Received offline notification from Artemis to download new version. Url - "+newVersionUrl);
+                showDownloadAlertDialog(newVersionUrl);
+//                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newVersionUrl));
+//                startActivity(browserIntent);
+            }
+//            for (String key : getIntent().getExtras().keySet()) {
+//                String value = getIntent().getExtras().get(key)+"";
+//                Log.i(TAG, "Key: " + key + " Value: " + value);
+//            }
+        } else{
+            Log.i(TAG, "Intent has no extras");
+        }
+
         if (a != null && a.equals(ENABLE)) {
             MenuBuilder m = new MenuBuilder(this);
             MenuItem item = m.add(Menu.NONE, R.id.action_call, Menu.NONE, "");
             item.setEnabled(RecordingService.isEnabled(this));
             onOptionsItemSelected(item);
         }
+    }
+
+
+    private void showDownloadAlertDialog(final String urlToDownload){
+        //MainActivity.startActivity();
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Your must install new version of Artemis Caller app. Press Ok to go to APK download site.");
+        // alert.setMessage("Message");
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //Your action here
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(urlToDownload));
+                startActivity(browserIntent);
+
+            }
+        });
+
+        alert.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                    }
+                });
+
+        alert.show();
     }
 
     @Override
@@ -377,34 +436,46 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
         boolean b = RecordingService.isEnabled(this);
         call.setChecked(b);
 
+        // set a diagnostic flag in Artemis LogBuffer
+        LogBuffer.getInstance().setRecordingCheckboxState(b);
+
+
         MenuItem show = menu.findItem(R.id.action_show_folder);
-        Intent ii = StorageProvider.openFolderIntent(this, storage.getStoragePath());
-        show.setIntent(ii);
-        if (!StorageProvider.isFolderCallable(this, ii, StorageProvider.getProvider().getAuthority()))
-            show.setVisible(false);
+        show.setVisible(false);
+//        Intent ii = StorageProvider.openFolderIntent(this, storage.getStoragePath());
+//        show.setIntent(ii);
+//        if (!StorageProvider.isFolderCallable(this, ii, StorageProvider.getProvider().getAuthority()))
+//            show.setVisible(false);
 
         MenuItem search = menu.findItem(R.id.action_search);
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(search);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchView.clearFocus();
-                recordings.search(query);
-                return true;
-            }
+//        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(search);
+//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//            @Override
+//            public boolean onQueryTextSubmit(String query) {
+//                searchView.clearFocus();
+//                recordings.search(query);
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(String newText) {
+//                return false;
+//            }
+//        });
+//        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+//            @Override
+//            public boolean onClose() {
+//                recordings.searchClose();
+//                return true;
+//            }
+//        });
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
-            }
-        });
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                recordings.searchClose();
-                return true;
-            }
-        });
+        // disable search, settings and sort menus
+        MenuItem settingsMenu = menu.findItem(R.id.action_settings);
+        MenuItem sortingMenu = menu.findItem(R.id.action_sort);
+        search.setVisible(false);
+        settingsMenu.setVisible(false);
+        sortingMenu.setVisible(false);
 
         recordings.onCreateOptionsMenu(menu);
 
@@ -427,8 +498,13 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
             case R.id.action_leap_setup:
                 startActivity(new Intent(this, SetupActivity.class));
                 return true;
+            case R.id.action_leap_log:
+                startActivity(new Intent(this, ViewLogActivity.class));
+                return true;
             case R.id.action_call:
                 item.setChecked(!item.isChecked());
+                LogBuffer.getInstance().setRecordingCheckboxState(item.isChecked());
+                LogBuffer.getInstance().createLogEntry("Call Recording checkbox is - "+item.isChecked());
                 if (item.isChecked() && !Storage.permitted(MainActivity.this, PERMISSIONS, RESULT_CALL)) {
                     resumeCall = item;
                     return true;
@@ -440,7 +516,7 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
                 Intent intent = item.getIntent();
                 startActivity(intent);
                 return true;
-            case R.id.action_about:
+            /*case R.id.action_about:
                 final Runnable survey = new Runnable() {
                     @Override
                     public void run() {
@@ -568,7 +644,7 @@ public class MainActivity extends AppCompatThemeActivity implements SharedPrefer
                     }
                 });
                 d.show();
-                return true;
+                return true;*/
         }
         return super.onOptionsItemSelected(item);
     }

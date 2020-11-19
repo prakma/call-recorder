@@ -18,7 +18,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="96dp"
+        android:layout_marginTop="2dp"
         android:layout_marginEnd="24dp"
         android:autofillHints="@string/prompt_email"
         android:hint="@string/prompt_email"
@@ -33,7 +33,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="24dp"
         android:autofillHints="@string/prompt_password"
         android:hint="@string/prompt_password"
@@ -52,21 +52,39 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="24dp"
         android:autofillHints="@string/prompt_phone"
         android:hint="@string/prompt_phone"
         android:inputType="phone"
         android:selectAllOnFocus="true"
+        android:enabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/password" />
+
+    <EditText
+        android:id="@+id/dlrcode"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="24dp"
+        android:autofillHints="@string/prompt_dlrcode"
+        android:hint="@string/prompt_dlrcode"
+        android:inputType="textCapWords"
+        android:selectAllOnFocus="true"
+        android:enabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/userphone" />
+
     <EditText
         android:id="@+id/usertenant"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="24dp"
         android:autofillHints="@string/prompt_tenant"
         android:hint="@string/prompt_tenant"
@@ -74,29 +92,48 @@
         android:selectAllOnFocus="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/userphone" />
+        app:layout_constraintTop_toBottomOf="@+id/dlrcode" />
+
+
 
     <EditText
         android:id="@+id/leapuribase"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="24dp"
         android:autofillHints="@string/leap_uri_base"
         android:hint="@string/leap_uri_base"
         android:inputType="textUri"
         android:selectAllOnFocus="true"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/usertenant" />
+
+    <EditText
+        android:id="@+id/recordLocationHint"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="24dp"
+        android:autofillHints="@string/record_location_hint_prefilled"
+        android:hint="@string/record_location_hint"
+        android:inputType="textUri"
+        android:selectAllOnFocus="true"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/leapuribase" />
 
     <EditText
         android:id="@+id/device_token"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="24dp"
         android:autofillHints="@string/device_token"
         android:hint="@string/device_token"
@@ -105,12 +142,22 @@
         android:enabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/leapuribase" />
+        app:layout_constraintTop_toBottomOf="@+id/recordLocationHint" />
 
-    <CheckBox android:id="@+id/checkbox_ignoressl"
+<!--    <CheckBox android:id="@+id/checkbox_ignoressl"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="@string/ignore_ssl"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/device_token"/>-->
+
+    <CheckBox android:id="@+id/checkbox_eula"
         android:layout_width="wrap_content"
+        android:layout_marginStart="24dp"
         android:layout_height="wrap_content"
-        android:text="@string/ignore_ssl"
+        android:text="@string/eula"
+        android:onClick="onEULACheckBoxClick"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/device_token"/>
@@ -124,12 +171,12 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="64dp"
-        android:enabled="true"
+        android:enabled="false"
         android:text="@string/register_btn"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/checkbox_ignoressl"
+        app:layout_constraintTop_toBottomOf="@+id/checkbox_eula"
         app:layout_constraintVertical_bias="0.2"
         android:onClick="saveAndRegister"/>
 

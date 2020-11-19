@@ -31,7 +31,7 @@ import okhttp3.Response;
 
 public abstract class ServerApiBase {
 
-    private static final String TAG = "ServerApiBase";
+    private static final String TAG = "prakma.ServerApiBase";
     //private static ServerApiBase _instance = new ServerApiBase();
 
 
@@ -43,7 +43,12 @@ public abstract class ServerApiBase {
     public static final String CONTENT_TYPE = "application/json";
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
-    public static final String SECRET_KEY = "LmVJcmzfXP1LTLCnIga3ePtF5hH21ryH";
+    //public static final String SECRET_KEY = "LmVJcmzfXP1LTLCnIga3ePtF5hH21ryH";
+
+    public static final String LEAP_API_SECRET = "LEAP_API_SECRET";
+    public static final String LEAP_API_KEY = "LEAP_API_KEY";
+    public static final String LEAP_SERVER_BASE = "LEAP_SERVER_BASE";
+
 
     private static final TrustManager[] trustAllCerts = new TrustManager[] {
             new X509TrustManager() {

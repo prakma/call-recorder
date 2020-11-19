@@ -12,7 +12,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
 public class AutoCallerInit {
-    private static final String TAG = "AutoCallerInit";
+    private static final String TAG = "prakma.AutoCallerInit";
     private static AutoCallerInit _instance = new AutoCallerInit();
 
 
